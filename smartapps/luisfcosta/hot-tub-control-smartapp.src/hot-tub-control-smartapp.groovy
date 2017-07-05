@@ -24,17 +24,17 @@ definition(
 )
 
 preferences {
-	section("Choose the switch/relay that controls the Spa Jets"){
-		input "jetsSwitchDevice", "capability.switch", title: "Switch?", required: true
+	section("Choose the switch/relay that controls the Hot Tub Jets"){
+		input "jetsSwitchDevice", "capability.switch", title: "Hot Tub Jets switch?", required: true
 	}
-	section("Choose the switch/relay that controls the Spa heater"){
-		input "heaterSwitchDevice", "capability.switch", title: "Switch?", required: true
+	section("Choose the switch/relay that controls the Hot Tub heater"){
+		input "heaterSwitchDevice", "capability.switch", title: "Hot Tub Heater Switch?", required: true
 	}
 	section("Choose the temperature sensor"){
-		input "tempSensorDevice", "capability.temperatureMeasurement", title: "Sensor?", required: true
+		input "tempSensorDevice", "capability.temperatureMeasurement", title: "Hot Tub temperature Sensor?", required: true
 	}
-	section("Choose the Virtual Spa Device? "){
-		input "virtualSpaDevice", "capability.thermostat", title: "Virtual device?", required: true
+	section("Choose the Virtual Hot Tub Device? "){
+		input "virtualSpaDevice", "capability.thermostat", title: "Hot Tub Virtual device?", required: true
 	}
 }
 
