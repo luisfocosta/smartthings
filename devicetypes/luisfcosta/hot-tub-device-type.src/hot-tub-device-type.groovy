@@ -36,6 +36,7 @@ metadata {
         attribute "jets", "String"
         //attribute "temperature", "Number"
         attribute "heatingSetpoint", "Number"
+        attribute "mode", "String"
 	}
 
 	tiles(scale: 2) {
@@ -73,21 +74,15 @@ metadata {
 			state "heat", label:'Now ${currentValue} F', unit: "F", backgroundColor:"#ffffff"
 		}
 
-		standardTile("mode", "device.switch", width: 2, height: 2, inactiveLabel: false, decoration: "flat") {
-			state "off", action:"on", nextState: "on", icon: "https://raw.githubusercontent.com/luisfocosta/smartthings/master/Hot%20tub/icons/Hot-tub-off.png"
+		standardTile("mode", "device.mode", width: 2, height: 2, inactiveLabel: false, decoration: "flat") {
+			state "off", action:"on", nextState: "on", icon: "https://raw.githubusercontent.com/luisfocosta/smartthings/master/Hot%20tub/icons/Hot-tub-heating-off.png"
 			state "on", action:"off", nextState: "off",  icon: "https://raw.githubusercontent.com/luisfocosta/smartthings/master/Hot%20tub/icons/Hot-Tub-On.png"
             state "heating", action: "off", nextState: "off", icon: "https://raw.githubusercontent.com/luisfocosta/smartthings/master/Hot%20tub/icons/Hot-Tub-Heating-On.png"
 		}
         
-        standardTile("operatingState", "device.thermostatOperatingState", width: 2, height: 2) {
-			state "off", label:'${name}', backgroundColor:"#ffffff"
-			state "heating", label:'Heating', backgroundColor:"#00A0DC"
-            state "idle", label:'Heating is off', backgroundColor:"#ffffff"
-		}
-        
 		main("mode")
 		details([
-			"temperature","mode", //"operatingState"
+			"temperature","mode",
             "heatSliderControl", "heatingSetpoint",
 			"jets", "tempUp","tempDown",
 		])
@@ -95,8 +90,9 @@ metadata {
 }
 
 def installed() {
-	//set defaults
+	//set some defaults
     //sendEvent(name: "switch", value: "off")
+    //sendEvent(name: "mode", value: "off")
 	//sendEvent(name: "temperature", value: 72, unit: "F")
 	//sendEvent(name: "heatingSetpoint", value: 100, unit: "F")
 	//sendEvent(name: "jets", value: "off")
@@ -107,25 +103,24 @@ def parse(String description) {
 }
 
 def evaluate(temp, heatingSetpoint) {
-	log.debug "evaluate(current temp:$temp, heating point:$heatingSetpoint)"
 	def threshold = 1.0
-    def mode = device.currentState("switch")?.value
-    log.debug "evaluate: switch=$mode"
+    def mode = device.currentState("mode")?.value
+    log.debug "evaluate: current temp:$temp, heating point:$heatingSetpoint, switch=$mode"
     def idle = false
     def heating = false
 
 	if (mode == "on") {
 		if (heatingSetpoint - temp >= threshold) {
-        	log.debug "Device: set heater on and operating state heating"
+        	log.debug "Device: set heater on"
         	heaterOn()
 			heating = true
-            sendEvent(name: "switch", value: "heating")
+            sendEvent(name: "mode", value: "heating")
 		}
 		else if (temp - heatingSetpoint >= threshold) {
-	        log.debug "Device: set operating state idle"
+	        log.debug "Device: set operating state idle (on)"
 			idle = true
             heaterOff()
-            sendEvent(name: "switch", value: "on")
+            sendEvent(name: "mode", value: "on")
 		}
 	}
 	else {
@@ -146,14 +141,15 @@ def JetsOff () {
 }
 
 def off() {
-	log.debug "Device: set switch off"
     heaterOff()
+    JetsOff()
 	sendEvent(name: "switch", value: "off")
+    sendEvent(name: "mode", value: "off")
 }
 
 def on() {
-	log.debug "Device: set switch on"
 	sendEvent(name: "switch", value: "on")
+    sendEvent(name: "mode", value: "on")
     def ts = device.currentState("heatingSetpoint")?.integerValue
     def temp = device.currentState("temperature")?.integerValue
     log.debug "on() - heatingSetpoint=$ts, temp=$temp"
@@ -166,10 +162,9 @@ def poll() {
 }
 
 def heaterOn() {
-	log.debug "Device: set heater on"
+	//log.debug "Device: set heater on"
 	sendEvent(name: "heater", value: "on")
-    //sendEvent(name: "thermostatOperatingState", value: "heating")
-    sendEvent(name: "switch", value: "heating")
+    sendEvent(name: "mode", value: "heating")
     def temp = device.currentState("temperature")?.integerValue
     def ts = device.currentState("heatingSetpoint")?.integerValue
     log.debug "temp: $temp, heating set point: $ts"
@@ -177,14 +172,14 @@ def heaterOn() {
 }
 
 def heaterOff() {
-	log.debug "Device: set heater off"
+	//log.debug "Device: set heater off"
 	sendEvent(name: "heater", value: "off")
     sendEvent(name: "switch", value: "on")
 }
 
 def setHeatingSetpoint(Integer value) {
-	value = normalizeHeatingSetPoint (value)
 	//log.debug "setHeatingSetpoint($value)"
+    value = normalizeHeatingSetPoint (value)
 	sendEvent(name: "heatingSetpoint", value: value)
     evaluate(device.currentState("temperature")?.integerValue, value)
 }
@@ -193,7 +188,7 @@ def tempUp() {
 	def ts = device.currentState("heatingSetpoint")?.integerValue
     def value = ts + 1
     def temp = device.currentState("temperature")?.integerValue
-    log.debug "tempUp from $ts to $value. Current temp is $temp"
+    //log.debug "tempUp from $ts to $value. Current temp is $temp"
     value = normalizeHeatingSetPoint (value)
     sendEvent(name:"heatingSetpoint", value: value)
     evaluate(device.currentState("temperature")?.integerValue, value)
@@ -203,7 +198,7 @@ def tempDown() {
     def ts = device.currentState("heatingSetpoint")?.integerValue
 	def value = ts - 1
     def temp = device.currentState("temperature")?.integerValue
-    log.debug "tempDown from $ts to $value. Current temp is $temp"
+    //log.debug "tempDown from $ts to $value. Current temp is $temp"
     value = normalizeHeatingSetPoint (value)
 	sendEvent(name:"heatingSetpoint", value: value)
     evaluate(device.currentState("temperature")?.integerValue, value)
