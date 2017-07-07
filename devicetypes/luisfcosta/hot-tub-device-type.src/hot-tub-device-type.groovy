@@ -80,11 +80,16 @@ metadata {
             state "heating", action: "off", nextState: "off", icon: "https://raw.githubusercontent.com/luisfocosta/smartthings/master/Hot%20tub/icons/Hot-Tub-Heating-On.png"
 		}
         
-		main("mode")
+        standardTile("switch", "device.switch", width: 2, height: 2, inactiveLabel: false, decoration: "flat") {
+            state "off", action:"on", icon: "https://raw.githubusercontent.com/luisfocosta/smartthings/master/Hot%20tub/icons/off-icon.png", backgroundColor: "#ffffff"
+            state "on", action:"off", icon: "https://raw.githubusercontent.com/luisfocosta/smartthings/master/Hot%20tub/icons/on-icon.png", backgroundColor: "#79b821"
+		}
+        
+		main("switch")
 		details([
-			"temperature","mode",
+			"temperature","mode", "jets",
             "heatSliderControl", "heatingSetpoint",
-			"jets", "tempUp","tempDown",
+			"tempUp","tempDown", "switch"
 		])
 	}
 }
